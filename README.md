@@ -1,6 +1,6 @@
 # AKS Platform 🚀
 
-A production-ready Kubernetes platform on Azure — built with Terraform, secured with WAF, and tested with a Node.js API.
+A production-ready Kubernetes platform on Azure  built with Terraform, secured with WAF, and tested with a Node.js API.
 
 
 > [!NOTE]
