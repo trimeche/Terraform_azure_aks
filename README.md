@@ -2,7 +2,6 @@
 
 A production-ready Kubernetes platform on Azure — built with Terraform, secured with WAF, and tested with a Node.js API.
 
-> Built for a Senior DevOps Engineer interview. Every resource is provisioned with code — zero manual clicks.
 
 > [!NOTE]
 > The demo uses a **Node.js API** for testing purposes — running on **$200 Azure free credits**.
