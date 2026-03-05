@@ -1,0 +1,120 @@
+# ============================================================
+#  azure-pipelines.yml  —  Azure DevOps CI/CD Pipeline
+#  Stages: Validate → Plan → Apply Dev → Approve → Apply Prod
+# ============================================================
+
+trigger:
+  branches:
+    include: [main]
+  paths:
+    include: ['**/*.tf', 'k8s/**']
+
+variables:
+  TF_VERSION: '1.6.6'
+  ENV_DEV:    'dev'
+  ENV_PROD:   'prod'
+  ARM_USE_OIDC: true
+
+stages:
+
+# ── Stage 1: Validate Terraform ─────────────────────────────
+- stage: Validate
+  displayName: '✅ Terraform Validate'
+  jobs:
+  - job: validate
+    pool: { vmImage: 'ubuntu-latest' }
+    steps:
+    - task: TerraformInstaller@1
+      inputs: { terraformVersion: $(TF_VERSION) }
+    - script: terraform fmt -check -recursive
+      displayName: 'Format check'
+    - script: |
+        terraform init -backend=false
+        terraform validate
+      displayName: 'Init + Validate'
+
+# ── Stage 2: Plan DEV ────────────────────────────────────────
+- stage: PlanDev
+  displayName: '📋 Plan DEV'
+  dependsOn: Validate
+  jobs:
+  - job: plan_dev
+    pool: { vmImage: 'ubuntu-latest' }
+    steps:
+    - task: TerraformInstaller@1
+      inputs: { terraformVersion: $(TF_VERSION) }
+    - task: TerraformTaskV4@4
+      displayName: 'terraform init (dev)'
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        backendServiceArm: 'AzureServiceConnection'
+        backendAzureRmResourceGroupName: 'rg-terraform-state'
+        backendAzureRmStorageAccountName: 'sttfstatedev001'
+        backendAzureRmContainerName: 'tfstate'
+        backendAzureRmKey: 'aks-platform.tfstate'
+    - task: TerraformTaskV4@4
+      displayName: 'terraform plan (dev)'
+      inputs:
+        provider: 'azurerm'
+        command: 'plan'
+        commandOptions: '-var-file=environments/dev/terraform.tfvars -out=dev.tfplan'
+        environmentServiceNameAzureRM: 'AzureServiceConnection'
+    - publish: dev.tfplan
+      artifact: dev-plan
+
+# ── Stage 3: Apply DEV ───────────────────────────────────────
+- stage: ApplyDev
+  displayName: '🚀 Apply DEV'
+  dependsOn: PlanDev
+  jobs:
+  - deployment: apply_dev
+    environment: 'dev'
+    pool: { vmImage: 'ubuntu-latest' }
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: dev-plan
+          - task: TerraformInstaller@1
+            inputs: { terraformVersion: $(TF_VERSION) }
+          - task: TerraformTaskV4@4
+            displayName: 'terraform apply (dev)'
+            inputs:
+              provider: 'azurerm'
+              command: 'apply'
+              commandOptions: '$(Pipeline.Workspace)/dev-plan/dev.tfplan'
+              environmentServiceNameAzureRM: 'AzureServiceConnection'
+
+# ── Stage 4: Plan + Apply PROD (manual approval gate) ───────
+- stage: ApplyProd
+  displayName: '🏭 Apply PROD'
+  dependsOn: ApplyDev
+  jobs:
+  - deployment: apply_prod
+    environment: 'prod'    # ← approval gate configured in ADO Environments
+    pool: { vmImage: 'ubuntu-latest' }
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: TerraformInstaller@1
+            inputs: { terraformVersion: $(TF_VERSION) }
+          - task: TerraformTaskV4@4
+            displayName: 'terraform init (prod)'
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              backendServiceArm: 'AzureServiceConnection'
+              backendAzureRmResourceGroupName: 'rg-terraform-state'
+              backendAzureRmStorageAccountName: 'sttfstateprod001'
+              backendAzureRmContainerName: 'tfstate'
+              backendAzureRmKey: 'aks-platform.tfstate'
+          - task: TerraformTaskV4@4
+            displayName: 'terraform apply (prod)'
+            inputs:
+              provider: 'azurerm'
+              command: 'apply'
+              commandOptions: '-var-file=environments/prod/terraform.tfvars -auto-approve'
+              environmentServiceNameAzureRM: 'AzureServiceConnection'
