@@ -36,18 +36,18 @@ The app pulls its image from a private ACR, reads secrets from Key Vault, and se
                     OWASP 3.1 · SSL
                          │
     ╔════════════════════▼════════════════════╗
-    ║           VNet 10.0.0.0/8              ║
-    ║                                        ║
-    ║   snet-appgw      10.1.0.0/24         ║
-    ║   snet-aks-nodes  10.2.0.0/16         ║
-    ║   snet-pe         10.4.0.0/24         ║
-    ║                                        ║
-    ║      [ NGINX Ingress :30080 ]         ║
-    ║                  │                    ║
-    ║         [Node.js 2 pods]             ║
-    ║          ×2 · HPA 2-5 pods           ║
-    ║                                        ║
-    ║   PE → ACR      PE → Key Vault        ║
+    ║           VNet 10.0.0.0/8               ║
+    ║                                         ║
+    ║   snet-appgw      10.1.0.0/24           ║
+    ║   snet-aks-nodes  10.2.0.0/16           ║
+    ║   snet-pe         10.4.0.0/24           ║
+    ║                                         ║
+    ║      [ NGINX Ingress :30080 ]           ║
+    ║                  │                      ║
+    ║         [Node.js 2 pods]                ║
+    ║          ×2 · HPA 2-5 pods              ║
+    ║                                         ║
+    ║   PE → ACR      PE → Key Vault          ║
     ╚════════════════════════════════════════╝
               │                │
            📦 ACR           🔑 Key Vault
