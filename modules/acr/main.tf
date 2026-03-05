@@ -4,18 +4,17 @@
 # ============================================================
 
 resource "azurerm_container_registry" "main" {
-  name                = var.acr_name
-  resource_group_name = var.resource_group_name
-  location            = var.location
-  sku                 = "Premium"       # Required for Private Link
-  admin_enabled       = false           # Use Managed Identity only
-  tags                = var.tags
-
-  # Disable public access — only Private Endpoint allowed
-  public_network_access_enabled = false
+  name                          = var.acr_name
+  public_network_access_enabled = true   # allow public for pushing
+  network_rule_default_action   = "Deny" #  but deny by default
 
   network_rule_set {
     default_action = "Deny"
+
+    ip_rule {
+      action   = "Allow"
+      ip_range = "197.15.113.25/32"  #  only My IP
+    }
   }
 }
 

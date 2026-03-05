@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nodejs-api-ingress
+  namespace: nodejs-app
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - path: /nodejs(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: nodejs-api-svc
+            port:
+              number: 80
+      - path: /health(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: nodejs-api-svc
+            port:
+              number: 80

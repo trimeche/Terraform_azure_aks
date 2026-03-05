@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nodejs-api
+  namespace: nodejs-app
+  labels:
+    app: nodejs-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nodejs-api
+  template:
+    metadata:
+      labels:
+        app: nodejs-api
+    spec:
+      nodeSelector:
+        nodepool-type: user
+
+      containers:
+      - name: nodejs-api
+        image: acraksplatformdevweu.azurecr.io/nodejs-api:latest
+        ports:
+        - containerPort: 3000
+
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: APP_VERSION
+          value: "1.0.0"
+
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
