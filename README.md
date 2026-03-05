@@ -114,10 +114,10 @@ helm install ingress-nginx ingress-nginx/ingress-nginx \
 cd app-nodejs
 
 # Build and push to ACR
-az acr update --name acrplatform --default-action Allow
-az acr login  --name acrplatform
-docker build --network=host -t acrplatform.azurecr.io/nodejs-api:latest .
-docker push acrplatform.azurecr.io/nodejs-api:latest
+az acr update --name acraksplatformdevweu --default-action Allow
+az acr login  --name acraksplatformdevweu
+docker build --network=host -t acraksplatformdevweu.azurecr.io/nodejs-api:latest .
+docker push acraksplatformdevweu.azurecr.io/nodejs-api:latest
 
 # Deploy to AKS
 kubectl apply -f k8s/namespace.yaml
@@ -169,8 +169,8 @@ kubectl exec -it <pod-name> -n nodejs-app -- sh
 
 ### Redeploy after a code change
 ```bash
-docker build --network=host -t acrplatform.azurecr.io/nodejs-api:latest .
-docker push acrplatform.azurecr.io/nodejs-api:latest
+docker build --network=host -t acraksplatformdevweu.azurecr.io/nodejs-api:latest .
+docker push acraksplatformdevweu.azurecr.io/nodejs-api:latest
 kubectl rollout restart deployment/nodejs-api -n nodejs-app
 kubectl rollout status deployment/nodejs-api -n nodejs-app
 ```
