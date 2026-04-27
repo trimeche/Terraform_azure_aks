@@ -6,7 +6,10 @@
 resource "azurerm_container_registry" "main" {
   name                          = var.acr_name
   public_network_access_enabled = true   # allow public for pushing
-  network_rule_default_action   = "Deny" #  but deny by default
+  #network_rule_default_action   = "Deny" #  but deny by default
+  sku                 = "Premium"
+  resource_group_name = var.resource_group_name
+  location            = var.location
 
   network_rule_set {
     default_action = "Deny"
